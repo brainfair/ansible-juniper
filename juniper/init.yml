@@ -1,0 +1,38 @@
+---
+- name: juniper initialization playbook
+  hosts: alljuniper
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars_prompt:
+    - name: "DEVICE_USERNAME"
+      promt: "Device username"
+      private: no
+    - name: "DEVICE_PASSWORD"
+      promt: "Device password"
+      private: yes
+
+  vars:
+    provider_info:
+      host: "{{ inventory_hostname }}"
+      username: "{{ DEVICE_USERNAME }}"
+      password: "{{ DEVICE_PASSWORD }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+
+  tasks:
+  - name: junos check connection
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: 10
+
+  - name: junos create ansible user with key-auth
+    junos_user:
+      provider: "{{ provider_info }}"
+      name: "{{ ansible_jun_username }}"
+      role: super-user
+      sshkey: "{{lookup('file', '/etc/ansible/.ssh/ansible.pub') }}"
+      state: present

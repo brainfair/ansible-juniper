@@ -1,0 +1,39 @@
+---
+- name: juniper set syslog to graylog2
+  hosts: alljuniper
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars:
+    provider_info:
+      host: "{{ inventory_hostname }}"
+      username: "{{ ansible_jun_username }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+
+  tasks:
+  - name: junos check connection
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+
+  - name: set juniper syslog host
+    junos_config:
+      provider: "{{ provider_info }}"
+      lines:
+        - set system syslog host 10.0.111.210 any any
+        - set system syslog host 10.0.111.210 port 2514
+        - set system syslog host 10.0.111.210 structured-data brief
+      comment: update config add syslog graylog2
+
+  - name: delete old syslog host
+    junos_logging:
+      provider: "{{ provider_info }}"
+      dest: host
+      name: 10.0.111.208
+      facility: any
+      level: any
+      state: absent

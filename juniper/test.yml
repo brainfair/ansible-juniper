@@ -1,0 +1,29 @@
+---
+- name: juniper test connection and show hostname
+  hosts: alljuniper
+  roles:
+  - Juniper.junos
+  connection: local
+  gather_facts: no
+
+  vars:
+    provider_info:
+      host: "{{ inventory_hostname }}"
+      username: "{{ ansible_jun_username }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+
+  tasks:
+  - name: junos check connection
+    wait_for:
+      host: "{{ inventory_hostname }}"
+      port: "{{ ansible_jun_port }}"
+      timeout: "{{ ansible_jun_timeout }}"
+
+  - name: collect default set of facts
+    junos_facts:
+      provider: "{{ provider_info }}"
+    register: print
+
+  - debug: 
+     var: print.ansible_facts.ansible_net_hostname
